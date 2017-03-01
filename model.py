@@ -27,11 +27,11 @@ from os import getcwd
 
 
 
-def get_images_url(url, folder):
+def get_images_url(url, folder, data_path):
     #parsing and getting the right url information:
     url_comp = url.replace('/',' ').replace('\\',' ').split(' ')
     url_comp[-1]
-    new_url = folder + '/IMG/'+url_comp[-1]
+    new_url = data_path + folder + '/IMG/'+url_comp[-1]
     return(new_url)
 
 def preprocess_image(img):
@@ -73,8 +73,82 @@ def data_visualization(X,y,y_pred):
         plt.imshow(img)  
     return
 
+def get_augmented_data(samples_df):
+    """
+    The input is a dataframe in the log format from the simulator. 
+    For each row in the log, we process each center, left and right image and we add these 3 and the corresponding flipped ones to a
+    X, y arrays, that are the output of the function
+    
+    """
+    num_obs = samples_df.shape[0]
+    print('Num initial observations in the dataset: ', num_obs)
+    image_url = data_log.center.tolist()
+    image_left_url = data_log.left.tolist()
+    image_right_url = data_log.right.tolist()
+    angles = data_log.steering.tolist()
+
+    # Preprocessing for each center image and angle in the data_log dataframe:
+    X = []
+    y = []
+    adjustment = 0.15
+    for i in range(num_obs): # num_obs
+
+        #Adding center image and steering_angle:
+        img = cv2.imread(image_url[i])
+        angle = angles[i]
+        img = preprocess_image(img)
+        X.append(img)
+        y.append(angle)
+        #Adding center image flipped:
+        img_flipped, angle_flipped = augmentation_flipping(img, angle)
+        X.append(img_flipped)
+        y.append(angle_flipped)
+
+        #Adding left image:
+        img = cv2.imread(image_left_url[i])
+        angle = angles[i] + adjustment
+        img = preprocess_image(img)
+        X.append(img)
+        y.append(angle)
+
+        #Adding left image flipped:
+        img_flipped, angle_flipped = augmentation_flipping(img, angle)
+        X.append(img_flipped)
+        y.append(angle_flipped)
+
+
+        #Adding right image:
+        img = cv2.imread(image_right_url[i])
+        angle = angles[i] - adjustment
+        img = preprocess_image(img)
+        X.append(img)
+        y.append(angle)
+
+        #Adding right image flipped:
+        img_flipped, angle_flipped = augmentation_flipping(img, angle)
+        X.append(img_flipped)
+        y.append(angle_flipped)   
+
+
+    X = np.array(X)
+    y = np.array(y)
+    print('Len for processed datasets: ',len(X),len(y), X[0].shape)
+    return(X,y)
+
+def generator(X_samples,y_samples, batch_size=32):
+    num_samples = len(X_samples)
+    while 1: # Loop forever so the generator never terminates
+        X_samples,y_samples = shuffle(X_samples,y_samples)
+        for offset in range(0, num_samples, batch_size):
+            X_batch_samples = X_samples[offset:offset+batch_size]
+            y_batch_samples = y_samples[offset:offset+batch_size]
+
+            yield sklearn.utils.shuffle(X_batch_samples, y_batch_samples)
+
+
 ## Local variables
 plots_path = '/home/carnd/CarND-Behavioral-Cloning-P3/'
+data_path = '/home/carnd/data/'
 
 
 ## UPLOADING DATA
@@ -82,16 +156,16 @@ plots_path = '/home/carnd/CarND-Behavioral-Cloning-P3/'
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
 for folder in ['data','slow']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part'
-    filename = folder + "/driving_log.csv"
+    filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
     df = pd.read_csv(filename, sep = ",")
     df.columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed']
     
     #Process urls for images, ensuring the right structure:
-    df['center'] = df.apply(lambda x: get_images_url(x['center'], folder), axis = 1)
-    df['left'] = df.apply(lambda x: get_images_url(x['left'], folder), axis = 1)
-    df['right'] = df.apply(lambda x: get_images_url(x['right'], folder), axis = 1)
+    df['center'] = df.apply(lambda x: get_images_url(x['center'], folder,data_path), axis = 1)
+    df['left'] = df.apply(lambda x: get_images_url(x['left'], folder, data_path), axis = 1)
+    df['right'] = df.apply(lambda x: get_images_url(x['right'], folder, data_path), axis = 1)
     
     # Concatenate data frames:
     data_log = pd.concat((data_log, df), axis=0)
@@ -115,62 +189,106 @@ plt.title('Histogram for steering angle data \n ')
 plt.grid(True)
 plt.show()
 
-fig.savefig(plots_path + 'steer_histogram_original_set.png')
+fig.savefig('steer_histogram_original_set.png')
 
-## DATA AUGMENTATION
+## DATA SPLIT
+##------------
+# When X and y is big, sklearn.utils.shuffle runs out of RAM memory, using another approach:
+# Splitting data into training and validation set from the data_log dataframe:
+samples = np.array(data_log)
+print(type(samples), len(samples))
+
+# Splitting data into training and validation set:
+np.random.shuffle(samples)
+train_samples, validation_samples = train_test_split(samples, test_size=0.1)
+print('Len of train_samples: ', len(train_samples))
+print('Len of validation_samples: ', len(validation_samples))
+
+
+## DATA AUGMENTATION 
 ##-------------------
-num_obs = data_log.shape[0]
-print('Num initial observations in the dataset: ', num_obs)
-image_url = data_log.center.tolist()
-image_left_url = data_log.left.tolist()
-image_right_url = data_log.right.tolist()
-angles = data_log.steering.tolist()
+# For each training and validation set, we will obtain nd arrays with augmented data: center, left and right, and 
+X_train,y_train = get_augmented_data(train_samples)
+X_val, y_val = get_augmented_data(validation_samples)
+print(X_train.shape,y_train.shape)
+print(X_val.shape, y_val.shape)
 
 
-X = []
-y = []
-adjustment = 0.15
-for i in range(num_obs): # num_obs
-    
-    #Adding center image and steering_angle:
-    img = cv2.imread(image_url[i])
-    angle = angles[i]
-    img = preprocess_image(img)
-    X.append(img)
-    y.append(angle)
-    #Adding center image flipped:
-    img_flipped, angle_flipped = augmentation_flipping(img, angle)
-    X.append(img_flipped)
-    y.append(angle_flipped)
-
-    #Adding left image:
-    img = cv2.imread(image_left_url[i])
-    angle = angles[i] + adjustment
-    img = preprocess_image(img)
-    X.append(img)
-    y.append(angle)
-    
-    #Adding left image flipped:
-    img_flipped, angle_flipped = augmentation_flipping(img, angle)
-    X.append(img_flipped)
-    y.append(angle_flipped)
-    
-    
-    #Adding right image:
-    img = cv2.imread(image_right_url[i])
-    angle = angles[i] - adjustment
-    img = preprocess_image(img)
-    X.append(img)
-    y.append(angle)
-    
-    #Adding right image flipped:
-    img_flipped, angle_flipped = augmentation_flipping(img, angle)
-    X.append(img_flipped)
-    y.append(angle_flipped)   
 
 
-X = np.array(X)
-y = np.array(y)
-print('Shapes for augmented datasets: ',len(X),len(y), X[0].shape)
+# compile and train the model using the generator function
+train_generator = generator(X_train,y_train, batch_size=32)
+validation_generator = generator(X_val,y_val, batch_size=32)
+
+### Define the model
+model = Sequential()
+
+# Normalize data: Preprocess incoming data, centered around zero with small standard deviation 
+model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
+
+#model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
+
+# Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
+model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+#model.add(Dropout(0.50))
+model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+#model.add(Dropout(0.50))
+model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+#model.add(Dropout(0.50))
+
+# Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+#model.add(Dropout(0.50))
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+#model.add(Dropout(0.50))
+
+# Add a flatten layer
+model.add(Flatten())
+
+# Add three fully connected layers leading to an output control value which is the inverse turning radius
+model.add(Dense(100,W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+model.add(Dense(50,W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+model.add(Dense(10,W_regularizer=l2(0.001)))
+model.add(Activation('relu'))
+
+# Add a fully connected output layer
+model.add(Dense(1))
+model.compile(loss='mse', optimizer='adam')
 
 
+## Train the model:
+EPOCHS = 5
+history = model.fit_generator(train_generator, 
+                    samples_per_epoch= len(X_train), 
+                    validation_data=validation_generator, 
+                    nb_val_samples=len(X_val), 
+                    nb_epoch=EPOCHS,verbose = 1)
+print(model.summary()) 
+
+## print the keys contained in the history object
+#print(history.history.keys())
+print('EPOCHS: ', EPOCHS)
+print(history.history)
+
+
+### plot the training and validation loss for each epoch
+fig =plt.figure()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model mean squared error loss \n')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+plt.show()
+fig.savefig('Model_mse.png')
+
+
+# Save model: creates a HDF5 file 'my_model.h5'
+model.save('model.h5')
