@@ -3,6 +3,7 @@ import csv
 import cv2
 import sklearn
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 from keras.models import Sequential, Model
 from keras.layers import Lambda
@@ -153,6 +154,7 @@ data_path = '/home/carnd/data/'
 
 ## UPLOADING DATA
 ##-----------------
+print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
 for folder in ['data','slow']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part'
@@ -208,10 +210,12 @@ print('Len of validation_samples: ', len(validation_samples))
 ## DATA AUGMENTATION 
 ##-------------------
 # For each training and validation set, we will obtain nd arrays with augmented data: center, left and right, and 
+print('...Data augmentation for training set...')
 X_train,y_train = get_augmented_data(train_samples)
+print('...Data augmentation for validating set...')
 X_val, y_val = get_augmented_data(validation_samples)
-print(X_train.shape,y_train.shape)
-print(X_val.shape, y_val.shape)
+print('Training set augmented: ',X_train.shape,y_train.shape)
+print('validating set augmented: ',X_val.shape, y_val.shape)
 
 
 
@@ -231,21 +235,18 @@ model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
 # Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(Activation('relu'))
-#model.add(Dropout(0.50))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(Activation('relu'))
-#model.add(Dropout(0.50))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(Activation('relu'))
-#model.add(Dropout(0.50))
+
 
 # Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
 model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
 model.add(Activation('relu'))
-#model.add(Dropout(0.50))
 model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
 model.add(Activation('relu'))
-#model.add(Dropout(0.50))
+
 
 # Add a flatten layer
 model.add(Flatten())
@@ -264,6 +265,7 @@ model.compile(loss='mse', optimizer='adam')
 
 
 ## Train the model:
+print('...Training the network...')
 EPOCHS = 5
 history = model.fit_generator(train_generator, 
                     samples_per_epoch= len(X_train), 
@@ -277,6 +279,9 @@ print(model.summary())
 print('EPOCHS: ', EPOCHS)
 print(history.history)
 
+# Save model: creates a HDF5 file 'my_model.h5'
+model.save('model.h5')
+print('...model.h5 saved...')
 
 ### plot the training and validation loss for each epoch
 fig =plt.figure()
@@ -290,5 +295,4 @@ plt.show()
 fig.savefig('Model_mse.png')
 
 
-# Save model: creates a HDF5 file 'my_model.h5'
-model.save('model.h5')
+
