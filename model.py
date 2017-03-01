@@ -157,7 +157,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','slow', 'juanma']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part'
+for folder in ['data']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
