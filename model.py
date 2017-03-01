@@ -110,7 +110,7 @@ def get_augmented_data(samples_df):
 
 
         # we just add flipped images and left and right images if angle > 0.33
-        if abs(angle) > 0.33:
+        if abs(angle) > 0.33 and abs(angle) <= 1.0:
             #Adding center image flipped:
             img_flipped, angle_flipped = augmentation_flipping(img, angle)
             X.append(img_flipped)
@@ -119,27 +119,29 @@ def get_augmented_data(samples_df):
             #Adding left image:
             img = cv2.imread(image_left_url[i])
             angle_adj = angle + adjustment
+            if abs(angle_adj) <= 1.0:
             img = preprocess_image(img)
-            X.append(img)
-            y.append(angle_adj)
+                X.append(img)
+                y.append(angle_adj)
 
-            #Adding left image flipped:
-            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-            X.append(img_flipped)
-            y.append(angle_flipped)
+                #Adding left image flipped:
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)
 
 
             #Adding right image:
             img = cv2.imread(image_right_url[i])
             angle_adj = angle - adjustment
-            img = preprocess_image(img)
-            X.append(img)
-            y.append(angle_adj)
+            if abs(angle_adj) <= 1.0:
+                img = preprocess_image(img)
+                X.append(img)
+                y.append(angle_adj)
 
-            #Adding right image flipped:
-            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-            X.append(img_flipped)
-            y.append(angle_flipped)   
+                #Adding right image flipped:
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)   
 
 
     X = np.array(X)
