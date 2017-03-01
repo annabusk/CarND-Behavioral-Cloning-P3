@@ -83,6 +83,7 @@ def get_augmented_data(samples_df):
     """
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
+    print('Expected aggregated number of samples without dropping some images with steering close to 0: ', num_obs*6 )
     image_url = data_log.center.tolist()
     image_left_url = data_log.left.tolist()
     image_right_url = data_log.right.tolist()
@@ -91,44 +92,54 @@ def get_augmented_data(samples_df):
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
     y = []
-    adjustment = 0.08
+    adjustment = 0.1
     for i in range(num_obs): # num_obs
-
-        #Adding center image and steering_angle:
-        img = cv2.imread(image_url[i])
         angle = angles[i]
+        img = cv2.imread(image_url[i])
         img = preprocess_image(img)
-        X.append(img)
-        y.append(angle)
-        #Adding center image flipped:
-        img_flipped, angle_flipped = augmentation_flipping(img, angle)
-        X.append(img_flipped)
-        y.append(angle_flipped)
 
-        #Adding left image:
-        img = cv2.imread(image_left_url[i])
-        angle = angles[i] + adjustment
-        img = preprocess_image(img)
-        X.append(img)
-        y.append(angle)
-
-        #Adding left image flipped:
-        img_flipped, angle_flipped = augmentation_flipping(img, angle)
-        X.append(img_flipped)
-        y.append(angle_flipped)
+        if abs(angle) < 0.15:
+            # for small angles, we keep images with prob 30%
+            if np.random.uniform() > 0.7:
+                X.append(img)
+                y.append(angle)
+        else: 
+            #if abs(angle)>0.15, we append the center image
+            X.append(img)
+            y.append(angle)
 
 
-        #Adding right image:
-        img = cv2.imread(image_right_url[i])
-        angle = angles[i] - adjustment
-        img = preprocess_image(img)
-        X.append(img)
-        y.append(angle)
+        # we just add flipped images and left and right images if angle > 0.33
+        if abs(angle) > 0.33:
+            #Adding center image flipped:
+            img_flipped, angle_flipped = augmentation_flipping(img, angle)
+            X.append(img_flipped)
+            y.append(angle_flipped)        
 
-        #Adding right image flipped:
-        img_flipped, angle_flipped = augmentation_flipping(img, angle)
-        X.append(img_flipped)
-        y.append(angle_flipped)   
+            #Adding left image:
+            img = cv2.imread(image_left_url[i])
+            angle_adj = angle + adjustment
+            img = preprocess_image(img)
+            X.append(img)
+            y.append(angle_adj)
+
+            #Adding left image flipped:
+            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+            X.append(img_flipped)
+            y.append(angle_flipped)
+
+
+            #Adding right image:
+            img = cv2.imread(image_right_url[i])
+            angle_adj = angle - adjustment
+            img = preprocess_image(img)
+            X.append(img)
+            y.append(angle_adj)
+
+            #Adding right image flipped:
+            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+            X.append(img_flipped)
+            y.append(angle_flipped)   
 
 
     X = np.array(X)
@@ -136,7 +147,7 @@ def get_augmented_data(samples_df):
     print('Len for processed datasets: ',len(X),len(y), X[0].shape)
     return(X,y)
 
-def generator(X_samples,y_samples, batch_size=32):
+def generator(X_samples,y_samples, batch_size):
     num_samples = len(X_samples)
     while 1: # Loop forever so the generator never terminates
         X_samples,y_samples = shuffle(X_samples,y_samples)
@@ -221,8 +232,9 @@ print('validating set augmented: ',X_val.shape, y_val.shape)
 
 
 # compile and train the model using the generator function
-train_generator = generator(X_train,y_train, batch_size=32)
-validation_generator = generator(X_val,y_val, batch_size=32)
+
+train_generator = generator(X_train,y_train, batch_size)
+validation_generator = generator(X_val,y_val, batch_size)
 
 ### Define the model
 model = Sequential()
@@ -266,7 +278,10 @@ model.compile(loss='mse', optimizer='adam')
 
 ## Train the model:
 print('...Training the network...')
+
 EPOCHS = 5
+batch_size = 128
+
 history = model.fit_generator(train_generator, 
                     samples_per_epoch= len(X_train), 
                     validation_data=validation_generator, 
