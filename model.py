@@ -98,9 +98,9 @@ def get_augmented_data(samples_df):
         img = cv2.imread(image_url[i])
         img = preprocess_image(img)
 
-        if abs(angle) < 0.15:
+        if abs(angle) < 0.1:
             # for small angles, we keep images with prob 40%
-            if np.random.uniform() > 0.6:
+            if np.random.uniform() > 0.5:
                 X.append(img)
                 y.append(angle)
         else: 
@@ -168,7 +168,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
+for folder in ['data','slow']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
