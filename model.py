@@ -120,7 +120,7 @@ def get_augmented_data(samples_df):
             img = cv2.imread(image_left_url[i])
             angle_adj = angle + adjustment
             if abs(angle_adj) <= 1.0:
-            img = preprocess_image(img)
+                img = preprocess_image(img)
                 X.append(img)
                 y.append(angle_adj)
 
