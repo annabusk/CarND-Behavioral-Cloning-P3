@@ -91,7 +91,7 @@ def get_augmented_data(samples_df):
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
     y = []
-    adjustment = 0.15
+    adjustment = 0.08
     for i in range(num_obs): # num_obs
 
         #Adding center image and steering_angle:
@@ -157,7 +157,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','slow']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part'
+for folder in ['data','slow', 'juanma']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part'
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
