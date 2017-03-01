@@ -99,8 +99,8 @@ def get_augmented_data(samples_df):
         img = preprocess_image(img)
 
         if abs(angle) < 0.15:
-            # for small angles, we keep images with prob 30%
-            if np.random.uniform() > 0.7:
+            # for small angles, we keep images with prob 40%
+            if np.random.uniform() > 0.6:
                 X.append(img)
                 y.append(angle)
         else: 
@@ -231,10 +231,6 @@ print('validating set augmented: ',X_val.shape, y_val.shape)
 
 
 
-# compile and train the model using the generator function
-
-train_generator = generator(X_train,y_train, batch_size)
-validation_generator = generator(X_val,y_val, batch_size)
 
 ### Define the model
 model = Sequential()
@@ -281,6 +277,11 @@ print('...Training the network...')
 
 EPOCHS = 5
 batch_size = 128
+
+# compile and train the model using the generator function
+train_generator = generator(X_train,y_train, batch_size)
+validation_generator = generator(X_val,y_val, batch_size)
+
 
 history = model.fit_generator(train_generator, 
                     samples_per_epoch= len(X_train), 
