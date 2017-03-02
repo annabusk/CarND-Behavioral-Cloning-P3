@@ -275,7 +275,7 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer=Adam(lr=0.0001))
+model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
 
 
 
