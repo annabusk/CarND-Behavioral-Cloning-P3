@@ -125,9 +125,9 @@ def get_augmented_data(samples_df):
                 y.append(angle_adj)
 
                 #Adding left image flipped:
-                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-                X.append(img_flipped)
-                y.append(angle_flipped)
+                # img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                # X.append(img_flipped)
+                # y.append(angle_flipped)
 
 
             #Adding right image:
@@ -140,8 +140,8 @@ def get_augmented_data(samples_df):
 
                 #Adding right image flipped:
                 img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-                X.append(img_flipped)
-                y.append(angle_flipped)   
+                # X.append(img_flipped)
+                # y.append(angle_flipped)   
 
 
     X = np.array(X)
@@ -170,7 +170,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','slow']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
+for folder in ['data','slow','juanma','slow_part']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
