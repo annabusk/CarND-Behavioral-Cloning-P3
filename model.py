@@ -79,16 +79,18 @@ def data_visualization(X,y,y_pred):
 
 def get_df_augmented(df):
     adjustment = 0.2
-    df_augmented = pd.DataFrame([], columns = ['img_url', 'steering'])
+    df_augmented = pd.DataFrame([], columns = ['img_url', 'angle'])
 
-    for i,row in df.iterrows():
-        picture = [row['center'], row['steering']]
-        df_augmented.loc[i*3] = picture
-        picture = [row['left'], row['steering'] + adjustment]
-        df_augmented.loc[i*3+1] = picture
-        picture = [row['right'], row['steering'] - adjustment]
-        df_augmented.loc[i*3+2] = picture
-    
+    df['angle_left'] = df['steering'] + adjustment
+    df['angle_right'] = df['steering'] - adjustment
+
+    df_aux= pd.DataFrame({'img_url': df.center.tolist(), 'angle': df.steering.tolist()})
+    df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
+    df_aux = pd.DataFrame({'img_url': df.left.tolist(), 'angle': df.angle_left.tolist()})
+    df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
+    df_aux = pd.DataFrame({'img_url': df.right.tolist(), 'angle': df.angle_right.tolist()})
+    df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
+
     return(df_augmented)                           
 
 def process_data(samples_df, training ):
