@@ -277,7 +277,7 @@ model.compile(loss='mse', optimizer='adam')
 ## Train the model:
 print('...Training the network...')
 
-EPOCHS = 5
+EPOCHS = 10
 batch_size = 128
 
 # compile and train the model using the generator function
