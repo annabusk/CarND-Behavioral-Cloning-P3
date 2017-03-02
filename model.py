@@ -76,7 +76,7 @@ def data_visualization(X,y,y_pred):
         plt.imshow(img)  
     return
 
-def get_augmented_data(samples_df):
+def get_augmented_data(samples_df, training ):
     """
     The input is a dataframe in the log format from the simulator. 
     For each row in the log, we process each center, left and right image and we add these 3 and the corresponding flipped ones to a
@@ -118,33 +118,36 @@ def get_augmented_data(samples_df):
             X.append(img_flipped)
             y.append(angle_flipped)        
 
-            #Adding left image:
-            img = cv2.imread(image_left_url[i])
-            angle_adj = angle + adjustment
-            #if abs(angle_adj) <= 1.0:
-            img = preprocess_image(img)
-            X.append(img)
-            y.append(angle_adj)
+            if training:
+                print('Training mode')
+                #Adding left image:
+                img = cv2.imread(image_left_url[i])
+                angle_adj = angle + adjustment
+                #if abs(angle_adj) <= 1.0:
+                img = preprocess_image(img)
+                X.append(img)
+                y.append(angle_adj)
 
                 #Adding left image flipped:
-            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-            X.append(img_flipped)
-            y.append(angle_flipped)
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)
 
 
-            #Adding right image:
-            img = cv2.imread(image_right_url[i])
-            angle_adj = angle - adjustment
-            #if abs(angle_adj) <= 1.0:
-            img = preprocess_image(img)
-            X.append(img)
-            y.append(angle_adj)
+                #Adding right image:
+                img = cv2.imread(image_right_url[i])
+                angle_adj = angle - adjustment
+                #if abs(angle_adj) <= 1.0:
+                img = preprocess_image(img)
+                X.append(img)
+                y.append(angle_adj)
 
-                #Adding right image flipped:
-            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-            X.append(img_flipped)
-            y.append(angle_flipped)   
-
+                    #Adding right image flipped:
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)   
+            else:
+                print('Validation mode, not addeding left and right images')
 
     X = np.array(X)
     y = np.array(y)
@@ -226,9 +229,9 @@ print('Len of validation_samples: ', len(validation_samples))
 ##-------------------
 # For each training and validation set, we will obtain nd arrays with augmented data: center, left and right, and 
 print('...Data augmentation for training set...')
-X_train,y_train = get_augmented_data(train_samples)
+X_train,y_train = get_augmented_data(train_samples, training=True)
 print('...Data augmentation for validating set...')
-X_val, y_val = get_augmented_data(validation_samples)
+X_val, y_val = get_augmented_data(validation_samples, training=False)
 print('Training set augmented: ',X_train.shape,y_train.shape)
 print('validating set augmented: ',X_val.shape, y_val.shape)
 
@@ -273,7 +276,7 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer=Adam(lr=1e-5))
+model.compile(loss='mse', optimizer=Adam(lr=0.0001))
 
 
 
