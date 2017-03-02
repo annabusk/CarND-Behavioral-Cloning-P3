@@ -10,6 +10,7 @@ from keras.layers import Lambda
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D
 from keras.regularizers import l2, activity_l2
+from keras.layers.advanced_activations import ELU
 
 import matplotlib.image as mpimg
 import scipy.ndimage
@@ -119,29 +120,29 @@ def get_augmented_data(samples_df):
             #Adding left image:
             img = cv2.imread(image_left_url[i])
             angle_adj = angle + adjustment
-            if abs(angle_adj) <= 1.0:
-                img = preprocess_image(img)
-                X.append(img)
-                y.append(angle_adj)
+            #if abs(angle_adj) <= 1.0:
+            img = preprocess_image(img)
+            X.append(img)
+            y.append(angle_adj)
 
                 #Adding left image flipped:
-                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-                X.append(img_flipped)
-                y.append(angle_flipped)
+            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+            X.append(img_flipped)
+            y.append(angle_flipped)
 
 
             #Adding right image:
             img = cv2.imread(image_right_url[i])
             angle_adj = angle - adjustment
-            if abs(angle_adj) <= 1.0:
-                img = preprocess_image(img)
-                X.append(img)
-                y.append(angle_adj)
+            #if abs(angle_adj) <= 1.0:
+            img = preprocess_image(img)
+            X.append(img)
+            y.append(angle_adj)
 
                 #Adding right image flipped:
-                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
-                X.append(img_flipped)
-                y.append(angle_flipped)   
+            img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+            X.append(img_flipped)
+            y.append(angle_flipped)   
 
 
     X = np.array(X)
@@ -244,18 +245,18 @@ model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
 
 # Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 
 
 # Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
 model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 
 
 # Add a flatten layer
@@ -263,11 +264,11 @@ model.add(Flatten())
 
 # Add three fully connected layers leading to an output control value which is the inverse turning radius
 model.add(Dense(100,W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 model.add(Dense(50,W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 model.add(Dense(10,W_regularizer=l2(0.001)))
-model.add(Activation('relu'))
+model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
