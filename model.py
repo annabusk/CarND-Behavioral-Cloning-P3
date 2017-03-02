@@ -96,7 +96,7 @@ def get_augmented_data(samples_df, training ):
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
     y = []
-    adjustment = 0.1
+    adjustment = 0.2
     for i in range(num_obs): # num_obs
         angle = angles[i]
         img = cv2.imread(image_url[i])
@@ -120,7 +120,7 @@ def get_augmented_data(samples_df, training ):
             X.append(img_flipped)
             y.append(angle_flipped)        
 
-            if training:
+            if 1:
                 #Adding left image:
                 img = cv2.imread(image_left_url[i])
                 angle_adj = angle + adjustment
@@ -219,7 +219,7 @@ print(type(samples), len(samples))
 
 # Splitting data into training and validation set:
 np.random.shuffle(samples)
-train_samples, validation_samples = train_test_split(samples, test_size=0.1)
+train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 print('Len of train_samples: ', len(train_samples))
 print('Len of validation_samples: ', len(validation_samples))
 
