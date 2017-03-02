@@ -11,6 +11,7 @@ from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D
 from keras.regularizers import l2, activity_l2
 from keras.layers.advanced_activations import ELU
+from keras.optimizers import Adam
 
 import matplotlib.image as mpimg
 import scipy.ndimage
@@ -272,7 +273,8 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer='adam')
+model.compile(loss='mse', optimizer=Adam(lr=1e-5))
+
 
 
 ## Train the model:
