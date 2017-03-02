@@ -83,7 +83,6 @@ def get_df_augmented(df):
 
     for i,row in df.iterrows():
         picture = [row['center'], row['steering']]
-        print(picture)
         df_augmented.loc[i*3] = picture
         picture = [row['left'], row['steering'] + adjustment]
         df_augmented.loc[i*3+1] = picture
