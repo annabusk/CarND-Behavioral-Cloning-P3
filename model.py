@@ -104,8 +104,8 @@ def process_data(samples_df, training ):
         print('Training mode')
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
-    image_url = data_log.img_url.tolist()
-    angles = data_log.steering.tolist()
+    image_url = samples_df.img_url.tolist()
+    angles = samples_df.angle.tolist()
 
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
@@ -201,6 +201,7 @@ fig.savefig('steer_histogram_original_set.png')
 ## ------------------
 print('...Data augmentation for training set...')
 data_augmented_df = get_df_augmented(data_log)
+print(data_augmented_df.head())
 print('Shape for total augmented data set: ', data_augmented_df.shape)
 
 
