@@ -83,6 +83,8 @@ def get_augmented_data(samples_df, training ):
     X, y arrays, that are the output of the function
     
     """
+    if training:
+        print('Training mode')
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
     print('Expected aggregated number of samples without dropping some images with steering close to 0: ', num_obs*6 )
@@ -119,7 +121,6 @@ def get_augmented_data(samples_df, training ):
             y.append(angle_flipped)        
 
             if training:
-                print('Training mode')
                 #Adding left image:
                 img = cv2.imread(image_left_url[i])
                 angle_adj = angle + adjustment
@@ -146,8 +147,6 @@ def get_augmented_data(samples_df, training ):
                 img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
                 X.append(img_flipped)
                 y.append(angle_flipped)   
-            else:
-                print('Validation mode, not addeding left and right images')
 
     X = np.array(X)
     y = np.array(y)
