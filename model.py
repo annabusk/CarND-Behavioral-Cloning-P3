@@ -209,7 +209,7 @@ print('Shape for total augmented data set: ', data_augmented_df.shape)
 # When X and y is big, sklearn.utils.shuffle runs out of RAM memory, using another approach:
 # Splitting data into training and validation set from the data_log dataframe:
 # Splitting data into training and validation set:
-np.random.shuffle(data_augmented_df)
+shuffle(data_augmented_df)
 train_samples, validation_samples = train_test_split(data_augmented_df, test_size=0.2)
 
 print('Len of train_samples: ', len(train_samples))
