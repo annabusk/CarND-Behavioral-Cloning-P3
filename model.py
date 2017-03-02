@@ -116,9 +116,9 @@ def process_data(samples_df, training ):
         img = cv2.imread(image_url[i])
         img = preprocess_image(img)
 
-        if abs(angle) < 0.1:
-            # for small angles, we keep images with prob 50%
-            if np.random.uniform() > 0.5:
+        if abs(angle) < 0.05:
+            # for small angles, we keep images with prob 40%
+            if np.random.uniform() > 0.6:
                 X.append(img)
                 y.append(angle)
         else: 
