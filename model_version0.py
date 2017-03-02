@@ -76,23 +76,7 @@ def data_visualization(X,y,y_pred):
         plt.imshow(img)  
     return
 
-
-def get_df_augmented(df):
-    adjustment = 0.2
-    df_augmented = pd.DataFrame([], columns = ['img_url', 'steering'])
-
-    for i,row in df.iterrows():
-        picture = [row['center'], row['steering']]
-        print(picture)
-        df_augmented.loc[i*3] = picture
-        picture = [row['left'], row['steering'] + adjustment]
-        df_augmented.loc[i*3+1] = picture
-        picture = [row['right'], row['steering'] - adjustment]
-        df_augmented.loc[i*3+2] = picture
-    
-    return(df_augmented)                           
-
-def process_data(samples_df, training ):
+def get_augmented_data(samples_df, training ):
     """
     The input is a dataframe in the log format from the simulator. 
     For each row in the log, we process each center, left and right image and we add these 3 and the corresponding flipped ones to a
@@ -103,20 +87,23 @@ def process_data(samples_df, training ):
         print('Training mode')
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
-    image_url = data_log.img_url.tolist()
+    print('Expected aggregated number of samples without dropping some images with steering close to 0: ', num_obs*6 )
+    image_url = data_log.center.tolist()
+    image_left_url = data_log.left.tolist()
+    image_right_url = data_log.right.tolist()
     angles = data_log.steering.tolist()
 
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
     y = []
-
+    adjustment = 0.2
     for i in range(num_obs): # num_obs
         angle = angles[i]
         img = cv2.imread(image_url[i])
         img = preprocess_image(img)
 
         if abs(angle) < 0.1:
-            # for small angles, we keep images with prob 50%
+            # for small angles, we keep images with prob 40%
             if np.random.uniform() > 0.5:
                 X.append(img)
                 y.append(angle)
@@ -133,7 +120,34 @@ def process_data(samples_df, training ):
             X.append(img_flipped)
             y.append(angle_flipped)        
 
- 
+            if 1:
+                #Adding left image:
+                img = cv2.imread(image_left_url[i])
+                angle_adj = angle + adjustment
+                #if abs(angle_adj) <= 1.0:
+                img = preprocess_image(img)
+                X.append(img)
+                y.append(angle_adj)
+
+                #Adding left image flipped:
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)
+
+
+                #Adding right image:
+                img = cv2.imread(image_right_url[i])
+                angle_adj = angle - adjustment
+                #if abs(angle_adj) <= 1.0:
+                img = preprocess_image(img)
+                X.append(img)
+                y.append(angle_adj)
+
+                    #Adding right image flipped:
+                img_flipped, angle_flipped = augmentation_flipping(img, angle_adj)
+                X.append(img_flipped)
+                y.append(angle_flipped)   
+
     X = np.array(X)
     y = np.array(y)
     print('Len for processed datasets: ',len(X),len(y), X[0].shape)
@@ -196,35 +210,31 @@ plt.show()
 
 fig.savefig('steer_histogram_original_set.png')
 
-## DATA AUGMENTATION WITH CENTER; LEFT AND RIGHT IMAGES
-## ------------------
-print('...Data augmentation for training set...')
-data_augmented_df = get_df_augmented(data_log)
-print('Shape for total augmented data set: ', data_augmented_df.shape)
-
-
 ## DATA SPLIT
 ##------------
 # When X and y is big, sklearn.utils.shuffle runs out of RAM memory, using another approach:
 # Splitting data into training and validation set from the data_log dataframe:
-# Splitting data into training and validation set:
-np.random.shuffle(data_augmented_df)
-train_samples, validation_samples = train_test_split(data_augmented_df, test_size=0.2)
+samples = np.array(data_log)
+print(type(samples), len(samples))
 
+# Splitting data into training and validation set:
+np.random.shuffle(samples)
+train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 print('Len of train_samples: ', len(train_samples))
 print('Len of validation_samples: ', len(validation_samples))
 
 
-## DATA PREPROCESSING AND ADDING FLIPPING IMAGES
+## DATA AUGMENTATION 
 ##-------------------
 # For each training and validation set, we will obtain nd arrays with augmented data: center, left and right, and 
-print('...Process training set...')
-X_train,y_train = process_data(train_samples, training=True)
-print('...Process validating set...')
-X_val, y_val = process_data(validation_samples, training=False)
+print('...Data augmentation for training set...')
+X_train,y_train = get_augmented_data(train_samples, training=True)
+print('...Data augmentation for validating set...')
+X_val, y_val = get_augmented_data(validation_samples, training=False)
+print('Training set augmented: ',X_train.shape,y_train.shape)
+print('validating set augmented: ',X_val.shape, y_val.shape)
 
-print('Training set processed: ',X_train.shape,y_train.shape)
-print('validating set processed: ',X_val.shape, y_val.shape)
+
 
 
 
