@@ -94,14 +94,13 @@ def get_df_augmented(df):
     return(df_augmented)                           
 
 def process_data(samples_df, training ):
-    """
+     """
     The input is a dataframe in the log format from the simulator. 
-    For each row in the log, we process each center, left and right image and we add these 3 and the corresponding flipped ones to a
+    For each row in the log,  we add these 3 and the corresponding flipped ones to a
     X, y arrays, that are the output of the function
     
     """
-    if training:
-        print('Training mode')
+    print('Training mode:', training)
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
     image_url = samples_df.img_url.tolist()
@@ -115,20 +114,11 @@ def process_data(samples_df, training ):
         angle = angles[i]
         img = cv2.imread(image_url[i])
         img = preprocess_image(img)
-
-        if abs(angle) < 0.05:
-            # for small angles, we keep images with prob 40%
-            if np.random.uniform() > 0.6:
-                X.append(img)
-                y.append(angle)
-        else: 
-            #if abs(angle)>0.15, we append the center image
-            X.append(img)
-            y.append(angle)
-
+        X.append(img)
+        y.append(angle)
 
         # we just add flipped images and left and right images if angle > 0.33
-        if abs(angle) > 0.33:
+        if abs(angle) > 0.33 and training:
             #Adding center image flipped:
             img_flipped, angle_flipped = augmentation_flipping(img, angle)
             X.append(img_flipped)
@@ -188,21 +178,78 @@ print(data_log.steering.describe())
 # Plotting data histogram:
 
 fig =plt.figure()
-n, bins, patches = plt.hist(data_log['steering'], 20, align='left',   alpha=0.75)
+n_bins = 23
+n, bins, patches = plt.hist(data_log['steering'], n_bins, align='left',   alpha=0.75)
 plt.axvline(int(data_log['steering'].mean()), color='b', linestyle='dashed', linewidth=2)
+avg_samples_per_bin = len(data_log['steering'])/n_bins
+print(avg_samples_per_bin)
 plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
-plt.title('Histogram for steering angle data \n ')
+plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
+plt.title('Histogram for center - steering angle data \n ')
 plt.grid(True)
 plt.show()
-
 fig.savefig('steer_histogram_original_set.png')
 
 ## DATA AUGMENTATION WITH CENTER; LEFT AND RIGHT IMAGES
 ## ------------------
 print('...Data augmentation for training set...')
 data_augmented_df = get_df_augmented(data_log)
-print(data_augmented_df.head())
+#print(data_augmented_df.head())
+print('Shape for center images: ', data_log.shape)
 print('Shape for total augmented data set: ', data_augmented_df.shape)
+
+fig =plt.figure()
+n_bins = 23
+angle_min = np.min(data_augmented_df['angle'])
+angle_max = np.max(data_augmented_df['angle'])
+print(angle_min,angle_max)
+n, bins, patches = plt.hist(data_augmented_df['angle'], n_bins, align='left',   alpha=0.75)
+plt.axvline(int(data_augmented_df['angle'].mean()), color='b', linestyle='dashed', linewidth=2)
+avg_samples_per_bin = len(data_augmented_df['angle'])/n_bins
+print(avg_samples_per_bin)
+plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
+plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
+plt.title('Histogram for augmented data with center, left and right images- steering angle data \n ')
+
+
+plt.grid(True)
+plt.show()
+fig.savefig('steer_histogram_original_set_center_left_andright.png')
+
+# Get a cleaned and better balcaned data set. Determine keep probability for each bin
+keep_probs = []
+target = avg_samples_per_bin * .5
+print('Target: ',target)
+for i in range(num_bins):
+    print(i, n[i], hist[i])
+    if n[i] < target:
+        #print('we are keeping all samples for bin ', i)
+        keep_probs.append(1.)
+    else:
+        prob = 1./(n[i]/target)
+        print('keeping prob for bin ', i, 'is: ',prob )
+        keep_probs.append(prob)
+
+clean_data_augmented_df =pd.DataFrame()
+index_keep = []
+print('----------------------------------')
+l = (angle_max -angle_min ) /num_bins
+print(l)
+print(bins)
+checked_bins = []
+for i, row in data_augmented_df.iterrows():
+
+    bin_i = int((row['angle']- angle_min)/l)
+    checked_bins.append(bin_i)
+    if bin_i < num_bins:
+        if np.random.rand() < keep_probs[bin_i]:
+            index_keep.append(i)
+    if bin_i == num_bins: #(that happens if it's the angle exactly the same that angle_max):
+        print(bin_i)
+        if np.random.rand() < keep_probs[num_bins-1]:
+            index_keep.append(i)
+
+clean_data_augmented_df = data_augmented_df.loc[index_keep]
 
 
 ## DATA SPLIT
@@ -210,8 +257,10 @@ print('Shape for total augmented data set: ', data_augmented_df.shape)
 # When X and y is big, sklearn.utils.shuffle runs out of RAM memory, using another approach:
 # Splitting data into training and validation set from the data_log dataframe:
 # Splitting data into training and validation set:
-shuffle(data_augmented_df)
-train_samples, validation_samples = train_test_split(data_augmented_df, test_size=0.2)
+#shuffle(data_augmented_df)
+#train_samples, validation_samples = train_test_split(data_augmented_df, test_size=0.2)
+shuffle(clean_data_augmented_df)
+train_samples, validation_samples = train_test_split(clean_data_augmented_df, test_size=0.2)
 
 print('Len of train_samples: ', len(train_samples))
 print('Len of validation_samples: ', len(validation_samples))
@@ -275,7 +324,7 @@ model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
 print('...Training the network...')
 
 EPOCHS = 5
-batch_size = 128
+batch_size = 32
 
 # compile and train the model using the generator function
 train_generator = generator(X_train,y_train, batch_size)
