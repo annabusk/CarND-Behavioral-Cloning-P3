@@ -151,7 +151,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','juanma']: # 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
+for folder in ['data','extra_track1','recoverings']: # 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
@@ -323,7 +323,7 @@ model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
 ## Train the model:
 print('...Training the network...')
 
-EPOCHS = 5
+EPOCHS = 10
 batch_size = 32
 
 # compile and train the model using the generator function
