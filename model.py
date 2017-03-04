@@ -163,6 +163,27 @@ def process_data(samples_df, training ):
     print('Len for processed datasets: ',len(X),len(y), X[0].shape)
     return(X,y)
 
+def plot_steering_data_histogram(df, , num_bins, title, file_name):
+    """
+    Plot ans save the histogram of steering angles for a certain DataFrame
+    """
+    fig =plt.figure()
+    angle_min = np.min(df['angle'])
+    angle_max = np.max(df['angle'])
+    print(angle_min,angle_max)
+    n, bins, patches = plt.hist(df['angle'], num_bins, align='left',   alpha=0.75)
+    plt.axvline(int(df['angle'].mean()), color='b', linestyle='dashed', linewidth=2)
+    avg_samples_per_bin = len(df['angle'])/num_bins
+    print(avg_samples_per_bin)
+    plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
+    plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
+    fig.savefig(file_name)
+    return(n,bins)
+
+
 def generator(X_samples,y_samples, batch_size):
     num_samples = len(X_samples)
     while 1: # Loop forever so the generator never terminates
@@ -209,19 +230,9 @@ print(data_log.head())
 print('summary data for steering angle: ')
 print(data_log.steering.describe())
 # Plotting data histogram:
-
-fig =plt.figure()
-n_bins = 23
-n, bins, patches = plt.hist(data_log['steering'], n_bins, align='left',   alpha=0.75)
-plt.axvline(int(data_log['steering'].mean()), color='b', linestyle='dashed', linewidth=2)
-avg_samples_per_bin = len(data_log['steering'])/n_bins
-print(avg_samples_per_bin)
-plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
-plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
-plt.title('Histogram for center - steering angle data \n ')
-plt.grid(True)
-plt.show()
-fig.savefig('steer_histogram_original_set.png')
+num_bins = 23
+hist_n, hist_bins = plot_steering_data_histogram(data_log, num_bins,title = 'Histogram for center - steering angle data \n ', 
+                                                file_name = 'Steering_histogram_original_set.png')
 
 ## DATA AUGMENTATION WITH CENTER; LEFT AND RIGHT IMAGES
 ## ------------------
@@ -231,47 +242,38 @@ data_augmented_df = get_df_augmented(data_log)
 print('Shape for center images: ', data_log.shape)
 print('Shape for total augmented data set: ', data_augmented_df.shape)
 
-fig =plt.figure()
-num_bins = 23
-angle_min = np.min(data_augmented_df['angle'])
-angle_max = np.max(data_augmented_df['angle'])
-print(angle_min,angle_max)
-n, bins, patches = plt.hist(data_augmented_df['angle'], num_bins, align='left',   alpha=0.75)
-plt.axvline(int(data_augmented_df['angle'].mean()), color='b', linestyle='dashed', linewidth=2)
-avg_samples_per_bin = len(data_augmented_df['angle'])/num_bins
-print(avg_samples_per_bin)
-plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
-plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
-plt.title('Histogram for augmented data with center, left and right images- steering angle data \n ')
+hist_n, hist_bins = plot_steering_data_histogram(data_augmented_df, num_bins,
+                    title = 'Histogram for augmented data with center, left and right images- steering angle data \n', 
+                    file_name = 'Steering_histogram_enriched_set.png')
 
+# The dataset is highly unbalanced towards images with 0 angles.
+# It Reduce the number of images with steering angle close to 0
 
-plt.grid(True)
-plt.show()
-fig.savefig('steer_histogram_original_set_center_left_andright.png')
-
-# Get a cleaned and better balcaned data set. Determine keep probability for each bin
 keep_probs = []
+avg_samples_per_bin = len(data_augmented_df['angle'])/num_bins
 target = avg_samples_per_bin * .5
 print('Target: ',target)
 for i in range(num_bins):
-    print(i, n[i], bins[i])
-    if n[i] < target:
+    print(i, hist_n[i], hist_bins[i])
+    if hist_n[i] < target:
         #print('we are keeping all samples for bin ', i)
         keep_probs.append(1.)
     else:
-        prob = 1./(n[i]/target)
+        prob = 1./(hist_n[i]/target)
         print('keeping prob for bin ', i, 'is: ',prob )
         keep_probs.append(prob)
-
 print('Keep probs vector: ', keep_probs)
-index_keep = []
-print('----------------------------------')
-l = (angle_max -angle_min ) /num_bins
-print(l)
-print(bins)
-checked_bins = []
-for i, row in data_augmented_df.iterrows():
 
+
+print('Cleaning data, reducing images with small steering angles....')
+l = (angle_max -angle_min ) /num_bins
+index_keep = []
+checked_bins = []
+
+# For each imagin data augmented, we decide whether to keeping or discarding it, 
+# accordingly with the probability to keep of the bucket it belongs to:
+for i, row in data_augmented_df.iterrows():
+    # we calculate which histogram bucket it belongs to:
     bin_i = int((row['angle']- angle_min)/l)
     checked_bins.append(bin_i)
     if bin_i < num_bins:
@@ -281,9 +283,12 @@ for i, row in data_augmented_df.iterrows():
         print(bin_i)
         if np.random.rand() < keep_probs[num_bins-1]:
             index_keep.append(i)
-
 clean_data_augmented_df = data_augmented_df.loc[index_keep]
 
+# Plotting steering angle histogram for last dataframe:
+hist_n, hist_bins = plot_steering_data_histogram(clean_data_augmented_df, num_bins,
+                    title = 'Histogram for augmented data reducing small angles - steering angle data \n', 
+                    file_name = 'Steering_histogram_cleaned_set.png')
 
 ## DATA SPLIT
 ##------------
@@ -312,84 +317,84 @@ print('validating set processed: ',X_val.shape, y_val.shape)
 
 
 
-### Define the model
-model = Sequential()
+# ### Define the model
+# model = Sequential()
 
-# Normalize data: Preprocess incoming data, centered around zero with small standard deviation 
-model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
+# # Normalize data: Preprocess incoming data, centered around zero with small standard deviation 
+# model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
 
-#model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
+# #model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 
-# Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
-model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-
-
-# Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
-model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
+# # Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
+# model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
+# model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
+# model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
 
 
-# Add a flatten layer
-model.add(Flatten())
-
-# Add three fully connected layers leading to an output control value which is the inverse turning radius
-model.add(Dense(100,W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-model.add(Dense(50,W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-model.add(Dense(10,W_regularizer=l2(0.001)))
-model.add(ELU()) # model.add(Activation('relu'))
-
-# Add a fully connected output layer
-model.add(Dense(1))
-model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
+# # Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
+# model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
+# model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
 
 
+# # Add a flatten layer
+# model.add(Flatten())
 
-## Train the model:
-print('...Training the network...')
+# # Add three fully connected layers leading to an output control value which is the inverse turning radius
+# model.add(Dense(100,W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
+# model.add(Dense(50,W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
+# model.add(Dense(10,W_regularizer=l2(0.001)))
+# model.add(ELU()) # model.add(Activation('relu'))
 
-EPOCHS = 5
-batch_size = 128
-
-# compile and train the model using the generator function
-train_generator = generator(X_train,y_train, batch_size)
-validation_generator = generator(X_val,y_val, batch_size)
+# # Add a fully connected output layer
+# model.add(Dense(1))
+# model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
 
 
-history = model.fit_generator(train_generator, 
-                    samples_per_epoch= len(X_train), 
-                    validation_data=validation_generator, 
-                    nb_val_samples=len(X_val), 
-                    nb_epoch=EPOCHS,verbose = 1)
-print(model.summary()) 
 
-## print the keys contained in the history object
-#print(history.history.keys())
-print('EPOCHS: ', EPOCHS)
-print(history.history)
+# ## Train the model:
+# print('...Training the network...')
 
-# Save model: creates a HDF5 file 'my_model.h5'
-model.save('model.h5')
-print('...model.h5 saved...')
+# EPOCHS = 5
+# batch_size = 128
 
-### plot the training and validation loss for each epoch
-fig =plt.figure()
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model mean squared error loss \n')
-plt.ylabel('mean squared error loss')
-plt.xlabel('epoch')
-plt.legend(['training set', 'validation set'], loc='upper right')
-plt.show()
-fig.savefig('Model_mse.png')
+# # compile and train the model using the generator function
+# train_generator = generator(X_train,y_train, batch_size)
+# validation_generator = generator(X_val,y_val, batch_size)
+
+
+# history = model.fit_generator(train_generator, 
+#                     samples_per_epoch= len(X_train), 
+#                     validation_data=validation_generator, 
+#                     nb_val_samples=len(X_val), 
+#                     nb_epoch=EPOCHS,verbose = 1)
+# print(model.summary()) 
+
+# ## print the keys contained in the history object
+# #print(history.history.keys())
+# print('EPOCHS: ', EPOCHS)
+# print(history.history)
+
+# # Save model: creates a HDF5 file 'my_model.h5'
+# model.save('model.h5')
+# print('...model.h5 saved...')
+
+# ### plot the training and validation loss for each epoch
+# fig =plt.figure()
+# plt.plot(history.history['loss'])
+# plt.plot(history.history['val_loss'])
+# plt.title('model mean squared error loss \n')
+# plt.ylabel('mean squared error loss')
+# plt.xlabel('epoch')
+# plt.legend(['training set', 'validation set'], loc='upper right')
+# plt.show()
+# fig.savefig('Model_mse.png')
 
 
 
