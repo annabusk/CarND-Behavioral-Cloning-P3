@@ -170,9 +170,6 @@ def plot_steering_data_histogram(df, num_bins, title, file_name):
     print(df.head())
     fig =plt.figure()
 
-    angle_min = np.min(df['steering'])
-    angle_max = np.max(df['steering'])
-    print(angle_min,angle_max)
     n, bins, patches = plt.hist(df['steering'], num_bins, align='left',   alpha=0.75)
     plt.axvline(int(df['steering'].mean()), color='b', linestyle='dashed', linewidth=2)
     avg_samples_per_bin = len(df['steering'])/num_bins
@@ -268,6 +265,9 @@ print('Keep probs vector: ', keep_probs)
 
 
 print('Cleaning data, reducing images with small steering angles....')
+angle_min = np.min(data_augmented_df['steering'])
+angle_max = np.max(data_augmented_df['steering'])
+print(angle_min,angle_max)
 l = (angle_max -angle_min ) /num_bins
 index_keep = []
 checked_bins = []
