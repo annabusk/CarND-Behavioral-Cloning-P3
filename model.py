@@ -94,7 +94,7 @@ def get_df_augmented(df):
     return(df_augmented)                           
 
 def process_data(samples_df, training ):
-     """
+    """
     The input is a dataframe in the log format from the simulator. 
     For each row in the log,  we add these 3 and the corresponding flipped ones to a
     X, y arrays, that are the output of the function
