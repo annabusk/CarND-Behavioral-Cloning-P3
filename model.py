@@ -227,7 +227,7 @@ print(data_log.head())
 ## DATA SET EXPLORATORY
 ##-------------------------
 print('summary data for steering angle: ')
-print(data_log.steering.describe())
+print('Summary basic data:',data_log.steering.describe())
 # Plotting data histogram:
 num_bins = 23
 hist_n, hist_bins = plot_steering_data_histogram(data_log, num_bins,title = 'Histogram for center - steering angle data \n ', 
@@ -237,10 +237,10 @@ hist_n, hist_bins = plot_steering_data_histogram(data_log, num_bins,title = 'His
 ## ------------------
 print('...Data augmentation for training set...')
 data_augmented_df = get_df_augmented(data_log)
-#print(data_augmented_df.head())
+
 print('Shape for center images: ', data_log.shape)
 print('Shape for total augmented data set: ', data_augmented_df.shape)
-
+print('Summary data_augmented_df:',data_augmented_df.steering.describe())
 hist_n, hist_bins = plot_steering_data_histogram(data_augmented_df, num_bins,
                     title = 'Histogram for augmented data with center, left and right images- steering angle data \n', 
                     file_name = 'Steering_histogram_enriched_set.png')
@@ -267,7 +267,6 @@ print('Keep probs vector: ', keep_probs)
 print('Cleaning data, reducing images with small steering angles....')
 angle_min = np.min(data_augmented_df['steering'])
 angle_max = np.max(data_augmented_df['steering'])
-print(angle_min,angle_max)
 l = (angle_max -angle_min ) /num_bins
 index_keep = []
 checked_bins = []
@@ -288,6 +287,7 @@ for i, row in data_augmented_df.iterrows():
 clean_data_augmented_df = data_augmented_df.loc[index_keep]
 
 # Plotting steering angle histogram for last dataframe:
+print('Summary data_augmented_df:',clean_data_augmented_df.steering.describe())
 hist_n, hist_bins = plot_steering_data_histogram(clean_data_augmented_df, num_bins,
                     title = 'Histogram for augmented data reducing small angles - steering angle data \n', 
                     file_name = 'Steering_histogram_cleaned_set.png')
@@ -303,7 +303,7 @@ shuffle(clean_data_augmented_df)
 train_samples, validation_samples = train_test_split(clean_data_augmented_df, test_size=0.2)
 
 print('Len of train_samples: ', len(train_samples))
-print('Len of validation_samples: ', len(validation_samples))
+print('Len of validation_samples, No changes from the original here: ', len(validation_samples))
 
 
 ## DATA PREPROCESSING AND ADDING FLIPPING IMAGES
