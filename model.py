@@ -163,7 +163,7 @@ def process_data(samples_df, training ):
     print('Len for processed datasets: ',len(X),len(y), X[0].shape)
     return(X,y)
 
-def plot_steering_data_histogram(df, , num_bins, title, file_name):
+def plot_steering_data_histogram(df, num_bins, title, file_name):
     """
     Plot ans save the histogram of steering angles for a certain DataFrame
     """
