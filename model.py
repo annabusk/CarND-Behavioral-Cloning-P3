@@ -217,7 +217,20 @@ plt.show()
 fig.savefig('steer_histogram_original_set_center_left_andright.png')
 
 # Get a cleaned and better balcaned data set. Determine keep probability for each bin
+keep_probs = []
+target = avg_samples_per_bin * .5
+print('Target: ',target)
+for i in range(num_bins):
+    print(i, n[i], bins[i])
+    if n[i] < target:
+        #print('we are keeping all samples for bin ', i)
+        keep_probs.append(1.)
+    else:
+        prob = 1./(n[i]/target)
+        print('keeping prob for bin ', i, 'is: ',prob )
+        keep_probs.append(prob)
 
+print('Keep probs vector: ', keep_probs)
 index_keep = []
 print('----------------------------------')
 l = (angle_max -angle_min ) /num_bins
