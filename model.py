@@ -252,7 +252,7 @@ hist_n, hist_bins = plot_steering_data_histogram(data_augmented_df, num_bins,
 # It Reduce the number of images with steering angle close to 0
 
 keep_probs = []
-avg_samples_per_bin = len(data_augmented_df['angle'])/num_bins
+avg_samples_per_bin = len(data_augmented_df['steering'])/num_bins
 target = avg_samples_per_bin * .5
 print('Target: ',target)
 for i in range(num_bins):
