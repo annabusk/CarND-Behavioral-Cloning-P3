@@ -151,7 +151,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','slow','slow_part','extra_track1','juanma']: # 'recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
+for folder in ['data','juanma']: # 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' #,'slow', 'juanma'
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
@@ -199,13 +199,13 @@ print('Shape for center images: ', data_log.shape)
 print('Shape for total augmented data set: ', data_augmented_df.shape)
 
 fig =plt.figure()
-n_bins = 23
+num_bins = 23
 angle_min = np.min(data_augmented_df['angle'])
 angle_max = np.max(data_augmented_df['angle'])
 print(angle_min,angle_max)
-n, bins, patches = plt.hist(data_augmented_df['angle'], n_bins, align='left',   alpha=0.75)
+n, bins, patches = plt.hist(data_augmented_df['angle'], num_bins, align='left',   alpha=0.75)
 plt.axvline(int(data_augmented_df['angle'].mean()), color='b', linestyle='dashed', linewidth=2)
-avg_samples_per_bin = len(data_augmented_df['angle'])/n_bins
+avg_samples_per_bin = len(data_augmented_df['angle'])/num_bins
 print(avg_samples_per_bin)
 plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
 plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
