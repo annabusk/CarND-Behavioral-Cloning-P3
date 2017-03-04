@@ -79,16 +79,16 @@ def data_visualization(X,y,y_pred):
 
 def get_df_augmented(df):
     adjustment = 0.25
-    df_augmented = pd.DataFrame([], columns = ['img_url', 'angle'])
+    df_augmented = pd.DataFrame([], columns = ['img_url', 'steering'])
 
     df['angle_left'] = df['steering'] + adjustment
     df['angle_right'] = df['steering'] - adjustment
 
-    df_aux= pd.DataFrame({'img_url': df.center.tolist(), 'angle': df.steering.tolist()})
+    df_aux= pd.DataFrame({'img_url': df.center.tolist(), 'steering': df.steering.tolist()})
     df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
-    df_aux = pd.DataFrame({'img_url': df.left.tolist(), 'angle': df.angle_left.tolist()})
+    df_aux = pd.DataFrame({'img_url': df.left.tolist(), 'steering': df.angle_left.tolist()})
     df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
-    df_aux = pd.DataFrame({'img_url': df.right.tolist(), 'angle': df.angle_right.tolist()})
+    df_aux = pd.DataFrame({'img_url': df.right.tolist(), 'steering': df.angle_right.tolist()})
     df_augmented = pd.concat([df_augmented, df_aux], axis = 0)
 
     return(df_augmented)                           
@@ -135,7 +135,7 @@ def process_data(samples_df, training ):
     num_obs = samples_df.shape[0]
     print('Num initial observations in the dataset: ', num_obs)
     image_url = samples_df.img_url.tolist()
-    angles = samples_df.angle.tolist()
+    angles = samples_df.steering.tolist()
 
     # Preprocessing for each center image and angle in the data_log dataframe:
     X = []
@@ -167,13 +167,15 @@ def plot_steering_data_histogram(df, num_bins, title, file_name):
     """
     Plot ans save the histogram of steering angles for a certain DataFrame
     """
+    print(df.head())
     fig =plt.figure()
-    angle_min = np.min(df['angle'])
-    angle_max = np.max(df['angle'])
+
+    angle_min = np.min(df['steering'])
+    angle_max = np.max(df['steering'])
     print(angle_min,angle_max)
-    n, bins, patches = plt.hist(df['angle'], num_bins, align='left',   alpha=0.75)
-    plt.axvline(int(df['angle'].mean()), color='b', linestyle='dashed', linewidth=2)
-    avg_samples_per_bin = len(df['angle'])/num_bins
+    n, bins, patches = plt.hist(df['steering'], num_bins, align='left',   alpha=0.75)
+    plt.axvline(int(df['steering'].mean()), color='b', linestyle='dashed', linewidth=2)
+    avg_samples_per_bin = len(df['steering'])/num_bins
     print(avg_samples_per_bin)
     plt.axvline(0, color='black', linestyle='dashed', linewidth=2)
     plt.axhline(avg_samples_per_bin, color='grey', linestyle='dashed', linewidth=2)
@@ -274,7 +276,7 @@ checked_bins = []
 # accordingly with the probability to keep of the bucket it belongs to:
 for i, row in data_augmented_df.iterrows():
     # we calculate which histogram bucket it belongs to:
-    bin_i = int((row['angle']- angle_min)/l)
+    bin_i = int((row['steering']- angle_min)/l)
     checked_bins.append(bin_i)
     if bin_i < num_bins:
         if np.random.rand() < keep_probs[bin_i]:
