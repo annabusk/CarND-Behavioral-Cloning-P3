@@ -204,7 +204,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','extra_track1','recoverings','slow']: # 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
+for folder in ['data','extra_track1','recoverings','slow','juanma']: # 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
@@ -319,84 +319,84 @@ print('validating set processed: ',X_val.shape, y_val.shape)
 
 
 
-# ### Define the model
-# model = Sequential()
+### Define the model
+model = Sequential()
 
-# # Normalize data: Preprocess incoming data, centered around zero with small standard deviation 
-# model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
+# Normalize data: Preprocess incoming data, centered around zero with small standard deviation 
+model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
 
-# #model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
+#model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 
-# # Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
-# model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-# model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-# model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-
-
-# # Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
-# model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-# model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
+# Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
+model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
+model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
+model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
 
 
-# # Add a flatten layer
-# model.add(Flatten())
-
-# # Add three fully connected layers leading to an output control value which is the inverse turning radius
-# model.add(Dense(100,W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-# model.add(Dense(50,W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-# model.add(Dense(10,W_regularizer=l2(0.001)))
-# model.add(ELU()) # model.add(Activation('relu'))
-
-# # Add a fully connected output layer
-# model.add(Dense(1))
-# model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
+# Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
 
 
+# Add a flatten layer
+model.add(Flatten())
 
-# ## Train the model:
-# print('...Training the network...')
+# Add three fully connected layers leading to an output control value which is the inverse turning radius
+model.add(Dense(100,W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
+model.add(Dense(50,W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
+model.add(Dense(10,W_regularizer=l2(0.001)))
+model.add(ELU()) # model.add(Activation('relu'))
 
-# EPOCHS = 5
-# batch_size = 128
-
-# # compile and train the model using the generator function
-# train_generator = generator(X_train,y_train, batch_size)
-# validation_generator = generator(X_val,y_val, batch_size)
+# Add a fully connected output layer
+model.add(Dense(1))
+model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
 
 
-# history = model.fit_generator(train_generator, 
-#                     samples_per_epoch= len(X_train), 
-#                     validation_data=validation_generator, 
-#                     nb_val_samples=len(X_val), 
-#                     nb_epoch=EPOCHS,verbose = 1)
-# print(model.summary()) 
 
-# ## print the keys contained in the history object
-# #print(history.history.keys())
-# print('EPOCHS: ', EPOCHS)
-# print(history.history)
+## Train the model:
+print('...Training the network...')
 
-# # Save model: creates a HDF5 file 'my_model.h5'
-# model.save('model.h5')
-# print('...model.h5 saved...')
+EPOCHS = 5
+batch_size = 128
 
-# ### plot the training and validation loss for each epoch
-# fig =plt.figure()
-# plt.plot(history.history['loss'])
-# plt.plot(history.history['val_loss'])
-# plt.title('model mean squared error loss \n')
-# plt.ylabel('mean squared error loss')
-# plt.xlabel('epoch')
-# plt.legend(['training set', 'validation set'], loc='upper right')
-# plt.show()
-# fig.savefig('Model_mse.png')
+# compile and train the model using the generator function
+train_generator = generator(X_train,y_train, batch_size)
+validation_generator = generator(X_val,y_val, batch_size)
+
+
+history = model.fit_generator(train_generator, 
+                    samples_per_epoch= len(X_train), 
+                    validation_data=validation_generator, 
+                    nb_val_samples=len(X_val), 
+                    nb_epoch=EPOCHS,verbose = 1)
+print(model.summary()) 
+
+## print the keys contained in the history object
+#print(history.history.keys())
+print('EPOCHS: ', EPOCHS)
+print(history.history)
+
+# Save model: creates a HDF5 file 'my_model.h5'
+model.save('model.h5')
+print('...model.h5 saved...')
+
+### plot the training and validation loss for each epoch
+fig =plt.figure()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model mean squared error loss \n')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+plt.show()
+fig.savefig('Model_mse.png')
 
 
 
