@@ -95,7 +95,7 @@ def get_df_augmented(df):
 
 def random_distort(img, angle):
     ''' 
-    method for adding random distortion to dataset images, including random brightness adjust, and a random
+    Add random distortion for training images images, including random brightness adjust, and a random
     vertical shift of the horizon position
     '''
     new_img = img.astype(float)
@@ -145,7 +145,8 @@ def process_data(samples_df, training ):
         angle = angles[i]
         img = cv2.imread(image_url[i])
         img = preprocess_image(img)
-        if training:
+        # For the training dataset we add some random distorsion
+        if training: 
             img, angle = random_distort(img, angle)
         X.append(img)
         y.append(angle)
@@ -271,7 +272,7 @@ l = (angle_max -angle_min ) /num_bins
 index_keep = []
 checked_bins = []
 
-# For each imagin data augmented, we decide whether to keeping or discarding it, 
+# For each imagin data augmented, we decide whether to keepi or discard it, 
 # accordingly with the probability to keep of the bucket it belongs to:
 for i, row in data_augmented_df.iterrows():
     # we calculate which histogram bucket it belongs to:
@@ -356,7 +357,7 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer='adam') #Adam(lr=0.0001)
+model.compile(loss='mse', optimizer=Adam(lr=0.0001)) #Adam(lr=0.0001) 'adam'
 
 
 
