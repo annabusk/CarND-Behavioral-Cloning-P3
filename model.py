@@ -205,7 +205,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','extra_track1','recoverings','slow','back2' ]: # ,'recov1','bridge', 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
+for folder in ['data','extra_track1','recoverings','slow','back2','slow_track2' ]: # ,'recov1','bridge', 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
@@ -222,7 +222,7 @@ for folder in ['data','extra_track1','recoverings','slow','back2' ]: # ,'recov1'
 
 
 print('Data uploaded shape: ',data_log.shape)
-print(data_log.head())
+#print(data_log.head())
 
 
 ## DATA SET EXPLORATORY
@@ -329,18 +329,18 @@ model.add(Lambda(lambda x: (x/127.5) - 1., input_shape=(66,200,3)))
 #model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 
 # Add three convolutional layers with a 2×2 stride and a 5×5 kernel, valid padding and filters: 24,36,48
-model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.01)))
+model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.01)))
+model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.01)))
+model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid',W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
 
 
 # Add 2 non-strided convolution with a 3×3 kernel size, valid padding and filters: 64,64
-model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.01)))
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
-model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.01)))
+model.add(Convolution2D(64, 3, 3, border_mode='valid',W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
 
 
@@ -348,11 +348,11 @@ model.add(ELU()) # model.add(Activation('relu'))
 model.add(Flatten())
 
 # Add three fully connected layers leading to an output control value which is the inverse turning radius
-model.add(Dense(100,W_regularizer=l2(0.01)))
+model.add(Dense(100,W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
-model.add(Dense(50,W_regularizer=l2(0.01)))
+model.add(Dense(50,W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
-model.add(Dense(10,W_regularizer=l2(0.01)))
+model.add(Dense(10,W_regularizer=l2(0.001)))
 model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
@@ -365,7 +365,7 @@ model.compile(loss='mse', optimizer= 'adam') #Adam(lr=0.0001)Adam(lr=0.01)
 print('...Training the network...')
 
 EPOCHS = 10
-batch_size = 128
+batch_size = 32
 
 # compile and train the model using the generator function
 train_generator = generator(X_train,y_train, batch_size)
