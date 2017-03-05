@@ -357,14 +357,14 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer=Adam(lr=0.0001)) #Adam(lr=0.0001) 'adam'
+model.compile(loss='mse', optimizer=Adam(lr=0.00001)) #Adam(lr=0.0001) 'adam'
 
 
 
 ## Train the model:
 print('...Training the network...')
 
-EPOCHS = 5
+EPOCHS = 10
 batch_size = 128
 
 # compile and train the model using the generator function
