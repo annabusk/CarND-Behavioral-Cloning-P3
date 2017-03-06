@@ -25,7 +25,6 @@ import seaborn as sns
 import matplotlib
 
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
 from os import getcwd
 
 
@@ -143,7 +142,9 @@ def process_data(samples_df, training ):
 
     for i in range(num_obs): # num_obs
         angle = angles[i]
-        img = cv2.imread(image_url[i])
+        #img = cv2.imread(image_url[i])
+        img = scipy.ndimage.imread(image_url[i])
+
         img = preprocess_image(img)
         # For the training dataset we add some random distorsion
         if training: 
@@ -194,7 +195,7 @@ def generator(X_samples,y_samples, batch_size):
 
             yield sklearn.utils.shuffle(X_batch_samples, y_batch_samples)
 
-
+###########################################################################################
 ## Local variables
 plots_path = '/home/carnd/CarND-Behavioral-Cloning-P3/'
 data_path = '/home/carnd/data/'
@@ -205,7 +206,7 @@ data_path = '/home/carnd/data/'
 print('...Data uploading...')
 data_log = pd.DataFrame([], columns = ['center', 'left', 'right', 'steering', 'throttle', 'brake', 'speed'])
 
-for folder in ['data','extra_track1','recoverings','slow','back2','slow_track2','curve1']: # ,'recov1','bridge', 'slow','slow_part','extra_track1','recoverings','recov2', 'recov3', 'recov4' #'juanma',,'slow_part' 
+for folder in ['data','extra_track1','recoverings','slow','back2','slow_track2','curve1']: 
     filename = data_path + folder + "/driving_log.csv"
     print(filename)
     #read log data for the corresponding set of images:
