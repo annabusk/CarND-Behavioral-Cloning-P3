@@ -93,7 +93,7 @@ def get_df_augmented(df):
 
     return(df_augmented)                           
 
-def random_distort(img, angle):
+def random_distortion(img, angle):
     ''' 
     Add random distortion for training images images, including random brightness adjust, 
     adding a random shadow and a random vertical shift of the horizon position. From another student
@@ -106,15 +106,15 @@ def random_distort(img, angle):
     if value <= 0:
         mask = (new_img[:,:,0] + value) < 0
     new_img[:,:,0] += np.where(mask, 0, value)
-    # # random shadow - full height, random left/right side, random darkening
-    # h,w = new_img.shape[0:2]
-    # mid = np.random.randint(0,w)
-    # factor = np.random.uniform(0.6,0.8)
-    # if np.random.rand() > .5:
-    #     new_img[:,0:mid,0] *= factor
-    # else:
-    #     new_img[:,mid:w,0] *= factor
-    # randomly shift horizon
+    # random shadow - full height, random left/right side, random darkening
+    h,w = new_img.shape[0:2]
+    mid = np.random.randint(0,w)
+    factor = np.random.uniform(0.6,0.8)
+    if np.random.rand() > .5:
+        new_img[:,0:mid,0] *= factor
+    else:
+        new_img[:,mid:w,0] *= factor
+    #randomly shift horizon
     h,w,_ = new_img.shape
     horizon = 2*h/5
     v_shift = np.random.randint(-h/8,h/8)
@@ -149,7 +149,7 @@ def process_data(samples_df, training ):
         img = preprocess_image(img)
         # For the training dataset we add some random distorsion
         if training: 
-            img, angle = random_distort(img, angle)
+            img, angle = random_distortion(img, angle)
         X.append(img)
         y.append(angle)
 
