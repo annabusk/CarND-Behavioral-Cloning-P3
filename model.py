@@ -25,6 +25,7 @@ import seaborn as sns
 import matplotlib
 
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from os import getcwd
 
 
