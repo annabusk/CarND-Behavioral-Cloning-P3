@@ -66,8 +66,6 @@ def data_visualization(X,y,y_pred):
         #print(img.shape)
         img = cv2.resize(img,None,fx=3, fy=3, interpolation = cv2.INTER_CUBIC)
         h,w = img.shape[0],img.shape[1]
-        cv2.putText(img, str(i), org=(2,18), fontFace=font, fontScale=1., color=(255,0,0), thickness=2)
-        cv2.putText(img, 'angle: ' + str(y[i]), org=(2,33), fontFace=font, fontScale=1., color=(255,0,0), thickness=2)
         cv2.line(img,(int(w/2),int(h)),(int(w/2+y[i]*w/4),int(h/2)),(0,255,0),thickness=4)      
         if len(y_pred) >0:
             cv2.line(img,(int(w/2),int(h)),(int(w/2+y_pred[i]*w/4),int(h/2)),(0,0,255),thickness=4)
@@ -94,8 +92,8 @@ def get_df_augmented(df):
 
 def random_distort(img, angle):
     ''' 
-    Add random distortion for training images images, including random brightness adjust, and a random
-    vertical shift of the horizon position
+    Add random distortion for training images images, including random brightness adjust, 
+    adding a random shadow and a random vertical shift of the horizon position. From another student
     '''
     new_img = img.astype(float)
     # random brightness - the mask bit keeps values from going beyond (0,255)
