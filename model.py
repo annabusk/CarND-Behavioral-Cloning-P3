@@ -31,7 +31,9 @@ from os import getcwd
 
 
 def get_images_url(url, folder, data_path):
-    #parsing and getting the right url information:
+    """
+    Parsing and getting ther right information
+    """
     url_comp = url.replace('/',' ').replace('\\',' ').split(' ')
     url_comp[-1]
     new_url = data_path + folder + '/IMG/'+url_comp[-1]
@@ -97,21 +99,21 @@ def random_distort(img, angle):
     adding a random shadow and a random vertical shift of the horizon position. From another student
     '''
     new_img = img.astype(float)
-    # random brightness - the mask bit keeps values from going beyond (0,255)
+    # random brightness 
     value = np.random.randint(-28, 28)
     if value > 0:
         mask = (new_img[:,:,0] + value) > 255 
     if value <= 0:
         mask = (new_img[:,:,0] + value) < 0
     new_img[:,:,0] += np.where(mask, 0, value)
-    # random shadow - full height, random left/right side, random darkening
-    h,w = new_img.shape[0:2]
-    mid = np.random.randint(0,w)
-    factor = np.random.uniform(0.6,0.8)
-    if np.random.rand() > .5:
-        new_img[:,0:mid,0] *= factor
-    else:
-        new_img[:,mid:w,0] *= factor
+    # # random shadow - full height, random left/right side, random darkening
+    # h,w = new_img.shape[0:2]
+    # mid = np.random.randint(0,w)
+    # factor = np.random.uniform(0.6,0.8)
+    # if np.random.rand() > .5:
+    #     new_img[:,0:mid,0] *= factor
+    # else:
+    #     new_img[:,mid:w,0] *= factor
     # randomly shift horizon
     h,w,_ = new_img.shape
     horizon = 2*h/5
@@ -141,8 +143,8 @@ def process_data(samples_df, training ):
 
     for i in range(num_obs): # num_obs
         angle = angles[i]
-        #img = cv2.imread(image_url[i])
-        img = scipy.ndimage.imread(image_url[i])
+        img = cv2.imread(image_url[i])
+        #img = scipy.ndimage.imread(image_url[i])
 
         img = preprocess_image(img)
         # For the training dataset we add some random distorsion
@@ -166,7 +168,7 @@ def process_data(samples_df, training ):
 
 def plot_steering_data_histogram(df, num_bins, title, file_name):
     """
-    Plot ans save the histogram of steering angles for a certain DataFrame
+    Plot and save the histogram of steering angles for a certain DataFrame
     """
     print(df.head())
     fig =plt.figure()
@@ -185,6 +187,7 @@ def plot_steering_data_histogram(df, num_bins, title, file_name):
 
 
 def generator(X_samples,y_samples, batch_size):
+
     num_samples = len(X_samples)
     while 1: # Loop forever so the generator never terminates
         X_samples,y_samples = shuffle(X_samples,y_samples)
@@ -193,6 +196,7 @@ def generator(X_samples,y_samples, batch_size):
             y_batch_samples = y_samples[offset:offset+batch_size]
 
             yield sklearn.utils.shuffle(X_batch_samples, y_batch_samples)
+
 
 ###########################################################################################
 ## Local variables
@@ -248,10 +252,13 @@ hist_n, hist_bins = plot_steering_data_histogram(data_augmented_df, num_bins,
 
 # The dataset is highly unbalanced towards images with 0 angles.
 # It Reduce the number of images with steering angle close to 0
+# we will assign a keeping probability for each bin in the histogram
+# in order to achieve a more uniform distribution
 
 keep_probs = []
 avg_samples_per_bin = len(data_augmented_df['steering'])/num_bins
-target = avg_samples_per_bin * .5
+#that target is chosen in order to get more or less images...
+target = avg_samples_per_bin / 2.
 print('Target: ',target)
 for i in range(num_bins):
     print(i, hist_n[i], hist_bins[i])
@@ -272,7 +279,7 @@ l = (angle_max -angle_min ) /num_bins
 index_keep = []
 checked_bins = []
 
-# For each imagin data augmented, we decide whether to keepi or discard it, 
+# For each image in data augmented, we decide whether to keepi or discard it, 
 # accordingly with the probability to keep of the bucket it belongs to:
 for i, row in data_augmented_df.iterrows():
     # we calculate which histogram bucket it belongs to:
@@ -295,11 +302,7 @@ hist_n, hist_bins = plot_steering_data_histogram(clean_data_augmented_df, num_bi
 
 ## DATA SPLIT
 ##------------
-# When X and y is big, sklearn.utils.shuffle runs out of RAM memory, using another approach:
-# Splitting data into training and validation set from the data_log dataframe:
 # Splitting data into training and validation set:
-#shuffle(data_augmented_df)
-#train_samples, validation_samples = train_test_split(data_augmented_df, test_size=0.2)
 shuffle(clean_data_augmented_df)
 train_samples, validation_samples = train_test_split(clean_data_augmented_df, test_size=0.2)
 
@@ -357,7 +360,7 @@ model.add(ELU()) # model.add(Activation('relu'))
 
 # Add a fully connected output layer
 model.add(Dense(1))
-model.compile(loss='mse', optimizer= 'adam') #Adam(lr=0.0001)Adam(lr=0.01)
+model.compile(loss='mse', optimizer= 'adam') 
 
 
 
